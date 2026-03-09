@@ -46,12 +46,18 @@ class WindowGenerator():
 
         return ds
 
-    def make_tf_split_dataset(self):
+    @property
+    def training_tf(self):
+        return self.make_tf_dataset(self.training_input, self.training_label)
 
-        self.training_tf = self.make_tf_dataset(self.training_input,self.training_label)
-        self.val_tf = self.make_tf_dataset(self.val_input,self.val_label)
-        self.test_tf = self.make_tf_dataset(self.test_input,self.test_label)
-            
+    @property
+    def val_tf(self):
+        return self.make_tf_dataset(self.val_input, self.val_label)
+
+    @property
+    def test_tf(self):
+        return self.make_tf_dataset(self.test_input, self.test_label)
+                
 
 
          
