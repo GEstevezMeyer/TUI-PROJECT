@@ -3,8 +3,9 @@ import tensorflow as tf
 import numpy as np 
 
 
+
 class WindowGenerator():
-    def __init__(self,df:pd.DataFrame,input_width:int, shift:int,p_val_df:float = 0.2, p_test_df: float = 0.1,label_width:int = 1):
+    def __init__(self,df:pd.DataFrame,input_width:int, shift:int,p_val_df:float = 0.2, p_test_df: float = 0.1,label_width:int = 1,label_encoder = None):
 
         if isinstance(df, pd.Series):
             df = df.to_frame()
@@ -22,13 +23,13 @@ class WindowGenerator():
             self.test_df = self.raw_df.iloc[validation_end::1].to_numpy()
 
 
-        self.training_input,self.training_label = self.split(self.training_df,self.input_width,self.shift,self.label_width)
-        self.val_input,self.val_label = self.split(self.val_df,self.input_width,self.shift,self.label_width)
-        self.test_input,self.test_label = self.split(self.test_df,self.input_width,self.shift,self.label_width)
+        self.training_input,self.training_label = self.split(self.training_df,self.input_width,self.shift,self.label_width,label_enconder=label_encoder)
+        self.val_input,self.val_label = self.split(self.val_df,self.input_width,self.shift,self.label_width,label_enconder=label_encoder)
+        self.test_input,self.test_label = self.split(self.test_df,self.input_width,self.shift,self.label_width,label_enconder=label_encoder)
 
     
     @staticmethod
-    def split(arr: np.ndarray, input_width: int, shift: int, label_width: int) -> tuple[np.ndarray, np.ndarray]:
+    def split(arr: np.ndarray, input_width: int, shift: int, label_width: int,label_enconder: int = None) -> tuple[np.ndarray, np.ndarray]:
 
         inputs = []
         labels = []
@@ -37,7 +38,19 @@ class WindowGenerator():
             inputs.append(arr[i:i+input_width])
             labels.append(arr[i + input_width + shift - 1 :i + input_width + shift - 1 + label_width])
 
-        return np.array(inputs), np.array(labels)
+
+        labels = np.array(labels)
+        inputs = np.array(inputs)
+
+        if label_enconder is not None: 
+            labels = labels[:, :, label_enconder]
+
+        if input_width == 1 : 
+            inputs = inputs.squeeze()
+
+
+        return inputs , np.array(labels).flatten()
+        
     
     def make_tf_dataset(self, inputs, labels):
 
@@ -57,8 +70,18 @@ class WindowGenerator():
     @property
     def test_tf(self):
         return self.make_tf_dataset(self.test_input, self.test_label)
-                
-
+    
+    @property
+    def normalize_training_df(self): 
+        return (self.training_df - self.training_df.mean())/self.training_df.std()
+    
+    @property
+    def normalize_val_df(self): 
+        return (self.val_df - self.val_df.mean())/self.val_df.std()
+    
+    @property
+    def normalize_test_df(self): 
+        return (self.test_df - self.test_df.mean())/self.test_df.std()
 
          
         
@@ -78,6 +101,9 @@ if __name__ == "__main__":
 
     print("\nFirst label:")
     print(wg.training_label[0])
+
+    print("proprety: ")
+    print(wg.normalize_training_df)
 
 
 

@@ -49,9 +49,10 @@ def create_window_class(df:pd.DataFrame) -> WindowGenerator:
     wg = WindowGenerator(df,input_width,shift)
     return wg
 
-def create_sequential_model(window: WindowGenerator):
+def create_sequential_model(window: WindowGenerator,input_shape = None) -> tf.keras.Sequential:
 
-    input_shape = window.training_input.shape[1:]  
+    if input_shape is None:
+        input_shape = window.training_input.shape[1:] 
 
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=input_shape),
@@ -73,14 +74,14 @@ def training_sequential_model(ticket:str) -> tf.keras.Sequential:
     df = extract_ticket_data(ticket)
     df = create_window_class(df)
     model = create_sequential_model(df)
-    history = model.fit(df.training_tf,validation_data =df.val_tf,epochs= 10)
-
+    history = model.fit(df.training_tf,validation_data =df.val_tf,epochs= 50)
     history_plot(history)
 
     return model
 
 
-def history_plot(history): 
+
+def history_plot(history) ->None: 
     plt.plot(history.history['mae'], label='train MAE')
     plt.plot(history.history['val_mae'], label='val MAE')
     plt.xlabel('Epoch')
@@ -100,4 +101,5 @@ def history_plot(history):
 
 
 if __name__ == "__main__": 
+    model = training_sequential_model_boosting("AAPL")
     model = training_sequential_model("AAPL")
