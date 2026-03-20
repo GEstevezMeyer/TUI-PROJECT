@@ -103,7 +103,7 @@ def training_sequential_model(ticket:str) -> tf.keras.Sequential:
     history = model.fit(df.training_tf,validation_data =df.val_tf,epochs= EPOCHS,callbacks=[early_stop])
     
 
-    return model,history,mean,std
+    return model,history,mean,std,df
 
 def saving_model(model:tf.keras.Sequential,ticket:str) -> None: 
     cwd = os.getcwd()
@@ -118,10 +118,10 @@ def saving_model(model:tf.keras.Sequential,ticket:str) -> None:
     model.save(f"tfKerasModels/{ticket}/{ticket}_model.keras")
 
 def main(ticket:str) ->dict:
-    model,history,mean,std = training_sequential_model(ticket)
+    model,history,mean,std,wg = training_sequential_model(ticket)
     saving_model(model,ticket)
 
-    return history,mean,std
+    return history,mean,std,model,wg
 
 
 if __name__ == "__main__": 
