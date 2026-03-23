@@ -7,7 +7,7 @@ warnings.filterwarnings(
 )
 
 from textual.app import App
-from textual.widgets import Header, Footer, Input,Tabs, Tab,Button
+from textual.widgets import Header, Footer, Input,Tabs, Tab,Button,Select
 from training import main 
 from textual.containers import Container
 from plots import *
@@ -34,6 +34,14 @@ class Terminal(App):
         
         yield Container(
             Input(placeholder="Ticker", id="ticker_input"),
+            Select(
+            options=[
+                ("Linear", "Linear"),
+                ("LSTM", "LSTM"),
+            ],value= "Linear",
+            prompt="model_type",
+            id="model_type"
+        ),
             PlotextPlot(id="history_plot"),
             PlotextPlot(id="prediction_plot"),
             id="dashboard_content"
@@ -50,7 +58,8 @@ class Terminal(App):
         yield Footer()
 
     async def on_mount(self):
-        self.query_one("#parameters_content").display = False
+        self.query_one("#history_plot").display = False
+        self.query_one("#prediction_plot").display = False
 
     async def on_tabs_tab_activated(self, event: Tabs.TabActivated):
         dashboard = self.query_one("#dashboard_content")
@@ -65,9 +74,11 @@ class Terminal(App):
     
     async def on_input_submitted(self, event: Input.Submitted):
        if event.input.id == "ticker_input":
-        event.input.disabled = True
+        model_type = self.query_one("#model_type", Select).value
+        result, mean, std, model, wg = main(event.value,model_type= model_type)
 
-        result, mean, std, model, wg = main(event.value)
+        self.query_one("#history_plot").display = True
+        self.query_one("#prediction_plot").display = True
 
         history_widget = self.query_one("#history_plot", PlotextPlot)
         prediction_widget = self.query_one("#prediction_plot", PlotextPlot)

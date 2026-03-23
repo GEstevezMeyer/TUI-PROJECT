@@ -140,7 +140,6 @@ def saving_model(model:tf.keras.Sequential,ticket:str) -> None:
     contents = os.listdir("tfKerasModels")
     if ticket not in contents:
         os.makedirs(f"tfKerasModels/{ticket}", exist_ok=True)
-
     model.save(f"tfKerasModels/{ticket}/{ticket}_model.keras")
 
 def main(ticket:str,model_type:str="LSTM") ->dict:
