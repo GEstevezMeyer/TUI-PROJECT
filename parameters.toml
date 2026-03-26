@@ -1,5 +1,6 @@
-#paramaters
-
-FIGSIZE = [12, 12]
+FIGSIZE = [
+    12,
+    12,
+]
 EPOCHS = 10
-SIGMA = 0.02
+SIGMA = 0.03

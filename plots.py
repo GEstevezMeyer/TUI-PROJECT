@@ -8,11 +8,49 @@ import tomllib
 import plotext as plt
 from textual_plotext import PlotextPlot
 from textual.widgets import DataTable
+import asyncio
+import yfinance as yf 
+import numpy as np
+
+from model_handler import get_numbers_of_models
+
+
+
 
 
 with open("parameters.toml","rb") as f:
     toml_data:dict = tomllib.load(f)
     FIGSIZE = tuple(toml_data["FIGSIZE"])
+
+def extract_action_data(ticker:str) -> np.array:
+    df = yf.Ticker(ticker).actions
+
+    return df.to_numpy()
+
+def extract_tickers_action_data() -> dict: 
+    tickers = get_numbers_of_models()
+    data = {}
+    for ticker in tickers: 
+        data[ticker] = extract_action_data(ticker)
+
+    return data 
+
+def action_plot_text_widget(widget: PlotextPlot):
+
+    data = extract_tickers_action_data()
+
+    plt = widget.plt 
+    plt.clear_data() 
+
+    for ticker in data.keys(): 
+        plt.plot(data[ticker][:,0],data[ticker][:,1], label=ticker)
+    
+    plt.title("Action of the Day")
+    plt.xlabel("Dividends")
+    plt.ylabel("Stock Splits")
+    
+
+    widget.refresh()  
 
 
 

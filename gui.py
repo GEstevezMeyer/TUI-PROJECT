@@ -7,7 +7,7 @@ warnings.filterwarnings(
 )
 
 from textual.app import App
-from textual.widgets import Header, Footer, Input,Tabs, Tab,Button,Select, DataTable
+from textual.widgets import Header, Footer, Input,Tabs, Tab,Button,Select, DataTable,Static
 from training import main 
 from textual.containers import Container
 from plots import *
@@ -33,7 +33,7 @@ class Terminal(App):
             Tab("Parameters", id="tab_parameters")
         )
 
-        yield Container(DataTable(id = "table_models"),id= "main_content")
+        yield Container(Static("TUInning"),PlotextPlot(id="stock_price_plot"),DataTable(id = "table_models"),id= "main_content")
 
     
         yield Container(
@@ -67,7 +67,8 @@ class Terminal(App):
         self.query_one("#prediction_plot",PlotextPlot).display = False
         self.query_one("#history_dataTable",DataTable).display = False
         model = create_ModelTable(self.query_one("#table_models",DataTable)) 
-
+        action_plot_text_widget(self.query_one("#stock_price_plot",PlotextPlot))
+        
         self.model = model 
        
 
@@ -75,6 +76,7 @@ class Terminal(App):
         dashboard = self.query_one("#dashboard_content")
         params = self.query_one("#parameters_content")
         main = self.query_one("#main_content")
+
 
         if event.tab.id == "tab_dashboard":
             dashboard.display = True
