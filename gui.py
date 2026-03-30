@@ -7,7 +7,7 @@ warnings.filterwarnings(
 )
 
 from textual.app import App
-from textual.widgets import Header, Footer, Input,Tabs, Tab,Button,Select, DataTable,Static,ProgressBar
+from textual.widgets import Header, Footer, Input,Tabs, Tab,Button,Select, DataTable,Static,ProgressBar,Switch
 from training import main 
 from textual.containers import Container
 from plots import *
@@ -57,7 +57,9 @@ class Terminal(App):
         yield Container(
             Input(placeholder="Sigma", id="sigma"),
             Input(placeholder="Epochs", id="epochs"),
-            Button("Update", id="update_button"),
+            Static("Gaussian Noise"),
+            Switch(id ="switch_Gaussian"),
+            Button(label="Submit"),
             id="parameters_content"
         )
 
@@ -93,9 +95,8 @@ class Terminal(App):
             dashboard.display = False
             params.display = False
             main.display = True
-
-            if len(self.model) != len(get_numbers_of_models()):
-                create_ModelTable(self.query_one("#table_models",DataTable)) 
+            self.query_one("#table_models",DataTable).clear(columns=True)
+            create_ModelTable(self.query_one("#table_models",DataTable)) 
 
 
     
@@ -107,6 +108,7 @@ class Terminal(App):
         data_Table = self.query_one("#history_dataTable",DataTable)
         progressBar = self.query_one("#epochs_progressbar")
         model_type = self.query_one("#model_type", Select).value
+        switch_gaussian_noise = self.query_one("#switch_Gaussian").value
 
         history_widget.display = False
         prediction_widget.display = False
@@ -116,9 +118,7 @@ class Terminal(App):
 
         result, mean, std, model, wg = await asyncio.to_thread(
             main,
-            progressBar,
-            event.value,
-            model_type
+            progressBar,switch_gaussian_noise,event.value,model_type
         )
 
         progressBar.display = False

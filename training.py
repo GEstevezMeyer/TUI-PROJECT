@@ -1,11 +1,4 @@
 import os
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2" 
-import warnings
-warnings.filterwarnings(
-    "ignore",
-    message=".*TensorFlow GPU support is not available on native Windows.*"
-)
-
 import pandas as pd 
 import tensorflow as tf 
 from tensorflow.keras.callbacks import EarlyStopping
@@ -20,28 +13,26 @@ from textual.widgets import ProgressBar
 
 
 
+def import_parameters():
+    with open("parameters.toml","rb") as f:
+        toml_data= tomllib.load(f)
+    
+    return toml_data
 
-with open("parameters.toml","rb") as f:
-    toml_data:dict = tomllib.load(f)
-    EPOCHS = toml_data["EPOCHS"]
-    SIGMA  = toml_data["SIGMA"]
-    PERIOD = toml_data["PERIOD"]
-
-
-def add_gaussian_noise(df: pd.DataFrame,sigma = SIGMA):
+def add_gaussian_noise(df: pd.DataFrame,sigma:float):
     for columns in df.columns: 
         noise = np.random.normal(0, df[columns].std()*sigma, size=len(df[columns]))
         df[columns] += noise
     return df
 
-def extract_ticket_data(ticket:str,period = PERIOD ,add_gaussian_nois = False) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
+def extract_ticket_data(ticket:str,period:str,sigma:float = 0,addGaussianNoise = False) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     df = yf.Ticker(ticket).history(period = period)
     if df.empty: 
         return False
     df = df.ffill()
     df = df.drop(columns=['Dividends', 'Stock Splits'])
     if add_gaussian_noise:
-        df = add_gaussian_noise(df)
+        df = add_gaussian_noise(df,sigma)
     mean = df.mean()
     std = df.std()
     df = (df-mean)/std
@@ -115,7 +106,7 @@ def create_linear_model(window: WindowGenerator,input_shape = None):
 
     return model
 
-def training_sequential_model(widget:ProgressBar, ticket:str,model_type = "Linear") -> tf.keras.Sequential: 
+def training_sequential_model(widget:ProgressBar, ticket:str,parameters,gaussianNoisse:bool,model_type = "Linear") -> tf.keras.Sequential: 
 
     widget.total = 100 
 
@@ -128,7 +119,9 @@ def training_sequential_model(widget:ProgressBar, ticket:str,model_type = "Linea
         verbose=1            
     )
 
-    df,mean,std = extract_ticket_data(ticket)
+    print(parameters)
+
+    df,mean,std = extract_ticket_data(ticket,parameters["PERIOD"],sigma=parameters["SIGMA"],addGaussianNoise = gaussianNoisse)
 
     widget.advance(20)
 
@@ -141,7 +134,7 @@ def training_sequential_model(widget:ProgressBar, ticket:str,model_type = "Linea
 
     widget.advance(20)
 
-    history = model.fit(df.training_tf,validation_data =df.val_tf,epochs= EPOCHS,callbacks=[early_stop])
+    history = model.fit(df.training_tf,validation_data =df.val_tf,epochs= parameters["EPOCHS"],callbacks=[early_stop])
 
     widget.advance(40)
 
@@ -158,11 +151,11 @@ def saving_model(model:tf.keras.Sequential,ticket:str) -> None:
         os.makedirs(f"tfKerasModels/{ticket}", exist_ok=True)
     model.save(f"tfKerasModels/{ticket}/{ticket}_model.keras")
 
-def make_toml_file(model_type:str,mean:float,std:float,history:History,ticket:str): 
+def make_toml_file(model_type:str,mean:float,std:float,history:History,ticket:str,parameters:dict): 
     toml_content = f"""
     model = "{model_type}"
-    epochs = {EPOCHS}
-    sigma = {SIGMA}
+    epochs = {parameters["EPOCHS"]}
+    sigma = {parameters["SIGMA"]}
     mae = {min(history.history["mae"])}
     val_mae =  {min(history.history["val_mae"])}
     loss = {min(history.history["loss"])}
@@ -172,8 +165,12 @@ def make_toml_file(model_type:str,mean:float,std:float,history:History,ticket:st
     with open(f"tfKerasModels/{ticket}/config.toml", "w") as f:
         f.write(toml_content)
 
-def main(widget:ProgressBar,ticket:str,model_type:str="LSTM") ->dict:
-    model,history,mean,std,wg = training_sequential_model(widget,ticket,model_type)
+def main(widget:ProgressBar,gaussianNoise:bool,ticket:str,model_type:str="LSTM") ->dict:
+
+    parameters = import_parameters()
+
+    model,history,mean,std,wg = training_sequential_model(widget,ticket,parameters,
+                                                          gaussianNoise,model_type)
 
     widget.advance(5)
 
@@ -181,7 +178,7 @@ def main(widget:ProgressBar,ticket:str,model_type:str="LSTM") ->dict:
 
     widget.advance(5)
 
-    make_toml_file(model_type,mean,std,history,ticket)
+    make_toml_file(model_type,mean,std,history,ticket,parameters)
 
     widget.advance(10)
 

@@ -2,6 +2,6 @@ FIGSIZE = [
     12,
     12,
 ]
-EPOCHS = 10
-SIGMA = 0.03
+EPOCHS = 5
+SIGMA = 0.01
 PERIOD = "max"
