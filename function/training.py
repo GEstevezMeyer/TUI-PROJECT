@@ -3,18 +3,16 @@ import pandas as pd
 import tensorflow as tf 
 from tensorflow.keras.callbacks import EarlyStopping
 import yfinance as yf
-from data_windowing import WindowGenerator
 import numpy as np
 import tomllib
-
 from tensorflow.keras.callbacks import History
-
 from textual.widgets import ProgressBar
 
+from function.data_windowing import WindowGenerator
 
 
 def import_parameters():
-    with open("parameters.toml","rb") as f:
+    with open("function/parameters.toml","rb") as f:
         toml_data= tomllib.load(f)
     
     return toml_data

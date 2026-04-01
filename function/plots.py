@@ -2,23 +2,23 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from data_windowing import WindowGenerator
+from function.data_windowing import WindowGenerator
+from function.model_handler import get_numbers_of_models
+
 import tensorflow as tf 
 import tomllib
 import plotext as plt
 from textual_plotext import PlotextPlot
 from textual.widgets import DataTable
-
 import yfinance as yf 
 import numpy as np
 
-from model_handler import get_numbers_of_models
 
 
 
 
 
-with open("parameters.toml","rb") as f:
+with open("function/parameters.toml","rb") as f:
     toml_data:dict = tomllib.load(f)
     FIGSIZE = tuple(toml_data["FIGSIZE"])
 

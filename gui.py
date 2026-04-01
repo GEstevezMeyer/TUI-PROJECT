@@ -8,22 +8,18 @@ warnings.filterwarnings(
 
 from textual.app import App
 from textual.widgets import Header, Footer, Input,Tabs, Tab,Button,Select, DataTable,Static,ProgressBar,Switch
-from training import main 
-from textual.containers import Container
-from plots import *
-from model_handler import * 
 from textual_plotext import PlotextPlot  
+from textual.containers import Container
+
+from function.plots import *
+from function.model_handler import * 
+from function.training import main 
+
+
 import tomllib
 import tomli_w
-
 import asyncio
 
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
 
 class Terminal(App):
     def compose(self):
@@ -161,13 +157,13 @@ class Terminal(App):
         
         if Safe:
             
-            with open("parameters.toml", "rb") as f:
+            with open("function/parameters.toml", "rb") as f:
                 parameters = tomllib.load(f)
 
             parameters["EPOCHS"] = int(epochs)
             parameters["SIGMA"] = float(sigma)
 
-            with open("parameters.toml", "wb") as f:
+            with open("function/parameters.toml", "wb") as f:
                 tomli_w.dump(parameters, f)
 
             
