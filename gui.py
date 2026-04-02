@@ -19,6 +19,16 @@ from function.training import main
 import tomllib
 import tomli_w
 import asyncio
+import enum 
+
+from enum import Enum
+
+class YFinancePeriod(Enum):
+    TWO_YEARS = "2y"
+    FIVE_YEARS = "5y"
+    TEN_YEARS = "10y"
+    YTD = "ytd"
+    MAX = "max"
 
 
 class Terminal(App):
@@ -55,6 +65,12 @@ class Terminal(App):
             Input(placeholder="Epochs", id="epochs"),
             Static("Gaussian Noise"),
             Switch(id ="switch_Gaussian"),
+            Select(
+                options=[(p.name.replace("_", " ").title(), p.value) for p in YFinancePeriod],
+                value=YFinancePeriod.TWO_YEARS.value,  
+                prompt="Select period",
+                id="period_select"
+            ),
             Button(label="Submit"),
             id="parameters_content"
         )
@@ -112,34 +128,38 @@ class Terminal(App):
 
         data_Table.clear(columns=True)
 
-        result, mean, std, model, wg = await asyncio.to_thread(
+        res = await asyncio.to_thread(
             main,
             progressBar,switch_gaussian_noise,event.value,model_type
         )
-
         progressBar.display = False
         progressBar.update(progress=0) 
 
-        history_widget.display = True
-        prediction_widget.display  = True
-        data_Table.display = True
+        if not(res is False):
 
-        history_plot_text_widget(history_widget, result)
-        plot_prediction_test_general_widget(
-            prediction_widget,
-            wg,
-            model,
-            mean["Close"].item(),
-            std["Close"].item(),
-            3
-        )
+            result, mean, std, model, wg = res
 
-        make_dataTable(data_Table,result)
+            history_widget.display = True
+            prediction_widget.display  = True
+            data_Table.display = True
+
+            history_plot_text_widget(history_widget, result)
+            plot_prediction_test_general_widget(
+                prediction_widget,
+                wg,
+                model,
+                mean["Close"].item(),
+                std["Close"].item(),
+                3
+            )
+
+            make_dataTable(data_Table,result)
 
     
     async def on_button_pressed(self,event: Button.Pressed): 
         sigma = self.query_one("#sigma", Input).value
         epochs = self.query_one("#epochs", Input).value
+        period = self.query_one("#period_select",Select).value
         
         Safe = True 
 
@@ -162,6 +182,7 @@ class Terminal(App):
 
             parameters["EPOCHS"] = int(epochs)
             parameters["SIGMA"] = float(sigma)
+            parameters["PERIOD"] = str(period)
 
             with open("function/parameters.toml", "wb") as f:
                 tomli_w.dump(parameters, f)

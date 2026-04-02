@@ -25,7 +25,7 @@ def add_gaussian_noise(df: pd.DataFrame,sigma:float):
 
 def extract_ticket_data(ticket:str,period:str,sigma:float = 0,addGaussianNoise = False) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     df = yf.Ticker(ticket).history(period = period)
-    if df.empty: 
+    if df.empty or df.isna().all().all(): 
         return False
     df = df.ffill()
     df = df.drop(columns=['Dividends', 'Stock Splits'])
@@ -55,7 +55,7 @@ def multivariate_input_width(df: pd.DataFrame, threshold=0.2, max_lag=20):
     return input_width, shift
 
 
-def create_window_class(df:pd.DataFrame,model_type:str = "LSTM") -> WindowGenerator:
+def create_window_class(df:pd.DataFrame,model_type:str) -> WindowGenerator:
     input_width, shift = multivariate_input_width(df)
     label_index = df.columns.get_loc("Close")
     if model_type == "LSTM":
@@ -119,12 +119,18 @@ def training_sequential_model(widget:ProgressBar, ticket:str,parameters,gaussian
 
     print(parameters)
 
-    df,mean,std = extract_ticket_data(ticket,parameters["PERIOD"],sigma=parameters["SIGMA"],addGaussianNoise = gaussianNoisse)
 
+    res = extract_ticket_data(ticket,parameters["PERIOD"],sigma=parameters["SIGMA"],addGaussianNoise = gaussianNoisse)
+
+    if not res:
+        return False
+
+    df,mean,std = res 
+   
     widget.advance(20)
 
     if model_type == "Linear":
-        df = create_window_class(df)
+        df = create_window_class(df,model_type)
         model = create_linear_model(df)
     elif model_type == "LSTM":
         df = create_window_class(df,model_type)
@@ -167,8 +173,12 @@ def main(widget:ProgressBar,gaussianNoise:bool,ticket:str,model_type:str="LSTM")
 
     parameters = import_parameters()
 
-    model,history,mean,std,wg = training_sequential_model(widget,ticket,parameters,
-                                                          gaussianNoise,model_type)
+    res = training_sequential_model(widget,ticket,parameters,gaussianNoise,model_type)
+
+    if not res:
+        return False
+
+    model,history,mean,std,wg = res
 
     widget.advance(5)
 
