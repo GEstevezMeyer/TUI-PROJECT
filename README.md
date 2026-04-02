@@ -1,15 +1,40 @@
-# GUI-PROJECT
-### Objectif
+# TUI-PROJECT (in progress) 
 
-Ce projet a pour objectif de créer une interface graphique (GUI, Graphical User Interface) en Python. Il vise également à améliorer mes compétences en deep learning, notamment en explorant différentes méthodes pour éviter le overfitting, la data augmentation et le boosting.
+I often find myself trying to test different models for forecasting and other tasks in machine learning in a non-interactive way. In this context, a growing trend in tech is the use of TUIs (Text-based User Interfaces) to interact with applications. This project aims to provide an introduction to how TUIs work in Python using the Textualize package.
 
-### Frontend
+# Models: 
+- Linear Regression
+- LSTM
 
-Pour le frontend, nous utiliserons Seaborn et Matplotlib pour la visualisation des données, et Textual pour la création de l'interface graphique.
 
-### Backend
 
-Le backend sera basé sur scikit-learn et TensorFlow pour la partie machine learning. Pour la gestion des données, nous utiliserons Pandas, l’API yfinance pour récupérer les données financières, et NumPy pour les calculs numériques.
+# Installation 
+```bash
+git clone <https://github.com/GEstevezMeyer/TUI-PROJECT.git>
+```
+
+# Create a virtual environment
+On macOS
+```bash
+python -m venv venv
+source venv/bin/activate
+``` 
+On Windows: 
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+# Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+# Usage: 
+```bash
+python gui.py 
+```
+
+
 
 
 
